@@ -308,9 +308,14 @@
         </div>
         <div class="game-content">
             <canvas id="minesweeper-canvas" class="game-canvas" width="400" height="400"></canvas>
+            <div id="mode-buttons" style="display:flex; justify-content:center; gap:1rem; margin: 1rem 0;">
+                <button id="flag-mode-button" class="control-button" title="Flag Mode" onclick="setFlagMode(true)">🚩</button>
+                <button id="reveal-mode-button" class="control-button" title="Reveal Mode" onclick="setFlagMode(false)">👁️</button>
+            </div>
+            <div id="mines-remaining" style="text-align:center; font-weight:bold; margin-bottom: 1rem; font-size: 1.2rem; color: #2c3e50;"></div>
             <div class="game-controls">
                 <button class="control-button" onclick="startMinesweeper()">New Game</button>
-                <button class="control-button" onclick="toggleDifficulty()">Difficulty: Easy</button>
+                <button id="difficulty-button" class="control-button" onclick="toggleDifficulty()">Difficulty: Easy</button>
             </div>
             <div class="instructions">
                 <strong>How to Play:</strong> Left click to reveal tiles, right click to flag mines. 
@@ -422,14 +427,46 @@
         }
 
         // Minesweeper Game
+        let flagMode = false; // false = reveal, true = flag
+
+        function setFlagMode(mode) {
+            console.log('setFlagMode called with mode:', mode);
+            flagMode = mode;
+            const flagBtn = document.getElementById('flag-mode-button');
+            const revealBtn = document.getElementById('reveal-mode-button');
+            if (flagMode) {
+                flagBtn.style.backgroundColor = '#5a6fd8';
+                revealBtn.style.backgroundColor = '';
+            } else {
+                revealBtn.style.backgroundColor = '#5a6fd8';
+                flagBtn.style.backgroundColor = '';
+            }
+        }
+
         function startMinesweeper() {
             const canvas = document.getElementById('minesweeper-canvas');
             const ctx = canvas.getContext('2d');
             const state = gameStates.minesweeper;
+
+            // Reset flagMode to default (Reveal mode) on new game start
+            flagMode = false;
+            setFlagMode(flagMode);
             
             const gridSize = state.difficulty === 'easy' ? 10 : 16;
-            const cellSize = 400 / gridSize;
             const mineCount = state.difficulty === 'easy' ? 10 : 40;
+
+            // Adjust canvas size based on grid size
+            const canvasSize = gridSize * 40; // 40px per cell
+            canvas.width = canvasSize;
+            canvas.height = canvasSize;
+            canvas.style.width = canvasSize + 'px';
+            canvas.style.height = canvasSize + 'px';
+
+            const cellSize = canvasSize / gridSize;
+
+            // Display mines remaining
+            const minesRemainingDiv = document.getElementById('mines-remaining');
+            minesRemainingDiv.textContent = `Mines Remaining: ${mineCount}`;
             
             // Initialize board
             state.board = Array(gridSize).fill().map(() => 
@@ -469,15 +506,35 @@
             
             state.gameOver = false;
             drawMinesweeper();
-            
+
             // Add event listeners
             canvas.onclick = (e) => {
                 if (state.gameOver) return;
                 const rect = canvas.getBoundingClientRect();
                 const x = Math.floor((e.clientX - rect.left) / cellSize);
                 const y = Math.floor((e.clientY - rect.top) / cellSize);
-                revealCell(x, y);
+                if (flagMode) {
+                    toggleFlag(x, y);
+                } else {
+                    revealCell(x, y);
+                }
             };
+
+            canvas.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                if (state.gameOver) return;
+                const touch = e.touches[0];
+                const rect = canvas.getBoundingClientRect();
+                const scaleX = canvas.width / rect.width;
+                const scaleY = canvas.height / rect.height;
+                const x = Math.floor((touch.clientX - rect.left) * scaleX / cellSize);
+                const y = Math.floor((touch.clientY - rect.top) * scaleY / cellSize);
+                if (flagMode) {
+                    toggleFlag(x, y);
+                } else {
+                    revealCell(x, y);
+                }
+            }, { passive: false });
             
             canvas.oncontextmenu = (e) => {
                 e.preventDefault();
@@ -591,18 +648,47 @@ function revealCell(x, y) {
             if (won) {
                 state.gameOver = true;
                 alert('Congratulations! You cleared all safe tiles!');
+                if (typeof confetti === 'function') {
+                    confetti();
+                }
             }
         }
         
         function toggleFlag(x, y) {
             const state = gameStates.minesweeper;
             const gridSize = state.difficulty === 'easy' ? 10 : 16;
-            
+            const mineCount = state.difficulty === 'easy' ? 10 : 40;
+
             if (x < 0 || x >= gridSize || y < 0 || y >= gridSize) return;
             if (state.board[y][x].revealed) return;
-            
+
+            // Count current flags
+            let currentFlags = 0;
+            for (let row of state.board) {
+                for (let cell of row) {
+                    if (cell.flagged) currentFlags++;
+                }
+            }
+
+            // Prevent placing more flags than mines
+            if (!state.board[y][x].flagged && currentFlags >= mineCount) {
+                alert(`You can only place ${mineCount} flags.`);
+                return;
+            }
+
             state.board[y][x].flagged = !state.board[y][x].flagged;
             drawMinesweeper();
+
+            // Update mines remaining display
+            const minesRemainingDiv = document.getElementById('mines-remaining');
+            // Recalculate current flags after toggling
+            let updatedFlags = 0;
+            for (let row of state.board) {
+                for (let cell of row) {
+                    if (cell.flagged) updatedFlags++;
+                }
+            }
+            minesRemainingDiv.textContent = `Mines Remaining: ${mineCount - updatedFlags}`;
 
             // Check win condition: all mines flagged and all other cells revealed
             let won = true;
@@ -624,8 +710,12 @@ function revealCell(x, y) {
         function toggleDifficulty() {
             const state = gameStates.minesweeper;
             state.difficulty = state.difficulty === 'easy' ? 'hard' : 'easy';
-            document.querySelector('#minesweeper-page .control-button:nth-child(2)').textContent = 
-                `Difficulty: ${state.difficulty.charAt(0).toUpperCase() + state.difficulty.slice(1)}`;
+            const difficultyBtn = document.getElementById('difficulty-button');
+            if (difficultyBtn) {
+                difficultyBtn.textContent = `Difficulty: ${state.difficulty.charAt(0).toUpperCase() + state.difficulty.slice(1)}`;
+            }
+            // Restart game on difficulty change to update board and mines remaining
+            startMinesweeper();
         }
 
         // Sudoku Game
