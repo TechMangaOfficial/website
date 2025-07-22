@@ -554,7 +554,7 @@
             }
         }
         
-        function revealCell(x, y) {
+function revealCell(x, y) {
             const state = gameStates.minesweeper;
             const gridSize = state.difficulty === 'easy' ? 10 : 16;
             
@@ -576,6 +576,22 @@
             }
             
             drawMinesweeper();
+
+            // Check win condition: all non-mine cells revealed
+            let won = true;
+            for (let row of state.board) {
+                for (let cell of row) {
+                    if (!cell.mine && !cell.revealed) {
+                        won = false;
+                        break;
+                    }
+                }
+                if (!won) break;
+            }
+            if (won) {
+                state.gameOver = true;
+                alert('Congratulations! You cleared all safe tiles!');
+            }
         }
         
         function toggleFlag(x, y) {
@@ -587,6 +603,22 @@
             
             state.board[y][x].flagged = !state.board[y][x].flagged;
             drawMinesweeper();
+
+            // Check win condition: all mines flagged and all other cells revealed
+            let won = true;
+            for (let row of state.board) {
+                for (let cell of row) {
+                    if ((cell.mine && !cell.flagged) || (!cell.mine && !cell.revealed)) {
+                        won = false;
+                        break;
+                    }
+                }
+                if (!won) break;
+            }
+            if (won) {
+                state.gameOver = true;
+                alert('Congratulations! You flagged all mines correctly!');
+            }
         }
         
         function toggleDifficulty() {
@@ -778,14 +810,14 @@
             }
         }
         
-        function startSnake() {
+function startSnake() {
             const state = gameStates.snake;
             
             // Reset game state
             clearInterval(snakeInterval);
             state.snake = [{x: 10, y: 10}];
             state.food = {x: 15, y: 15};
-            state.direction = {x: 0, y: 0};
+            state.direction = {x: 1, y: 0}; // Start moving right immediately
             state.running = true;
             state.paused = false;
             
@@ -873,10 +905,12 @@
             
             drawMemory();
             
-            canvas.onclick = (e) => {
+canvas.onclick = (e) => {
                 const rect = canvas.getBoundingClientRect();
-                const x = Math.floor((e.clientX - rect.left) / 120);
-                const y = Math.floor((e.clientY - rect.top) / 120);
+                const scaleX = canvas.width / rect.width;
+                const scaleY = canvas.height / rect.height;
+                const x = Math.floor((e.clientX - rect.left) * scaleX / 120);
+                const y = Math.floor((e.clientY - rect.top) * scaleY / 120);
                 const index = y * 4 + x;
                 
                 if (state.flipped.length < 2 && !state.flipped.includes(index) && !state.matched.includes(index)) {
