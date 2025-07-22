@@ -1,17 +1,971 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Under Construction</title>
-  <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gaming Hub - Play Classic Games</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .header {
+            text-align: center;
+            padding: 2rem 1rem;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .games-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1rem 2rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .game-card {
+            background: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .game-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+        }
+
+        .game-thumbnail {
+            width: 100%;
+            height: 200px;
+            background: linear-gradient(45deg, #f0f0f0, #e0e0e0);
+            border-radius: 10px;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4rem;
+            position: relative;
+        }
+
+        .minesweeper-thumb { background: linear-gradient(45deg, #ff6b6b, #ee5a52); }
+        .sudoku-thumb { background: linear-gradient(45deg, #4ecdc4, #44a08d); }
+        .snake-thumb { background: linear-gradient(45deg, #a8e6cf, #7fcdcd); }
+        .memory-thumb { background: linear-gradient(45deg, #ffd93d, #ff6b6b); }
+
+        .game-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+            color: #2c3e50;
+        }
+
+        .game-description {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 1rem;
+        }
+
+        .play-button {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 0.8rem 2rem;
+            border-radius: 25px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+
+        .play-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .game-page {
+            display: none;
+            background: white;
+            min-height: 100vh;
+            flex-direction: column;
+        }
+
+        .game-header {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .back-button {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .back-button:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .game-content {
+            flex: 1;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .game-canvas {
+            border: 3px solid #667eea;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .game-controls {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .control-button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .control-button:hover {
+            background: #5a6fd8;
+            transform: scale(1.05);
+        }
+
+        .instructions {
+            max-width: 600px;
+            text-align: center;
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 10px;
+            margin-top: 1rem;
+        }
+
+        /* Mobile Controls */
+        .mobile-controls {
+            display: none;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.5rem;
+            max-width: 200px;
+            margin: 1rem auto;
+        }
+
+        .mobile-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 1rem;
+            border-radius: 10px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            touch-action: manipulation;
+            user-select: none;
+        }
+
+        .mobile-btn:hover, .mobile-btn:active {
+            background: #5a6fd8;
+            transform: scale(0.95);
+        }
+
+        .mobile-btn:nth-child(1) { grid-column: 2; }
+        .mobile-btn:nth-child(2) { grid-column: 1; grid-row: 2; }
+        .mobile-btn:nth-child(3) { grid-column: 3; grid-row: 2; }
+        .mobile-btn:nth-child(4) { grid-column: 2; grid-row: 2; }
+
+        @media (max-width: 768px) {
+            .header h1 { font-size: 2rem; }
+            .header p { font-size: 1rem; }
+            .games-container { 
+                grid-template-columns: 1fr; 
+                padding: 0 0.5rem 2rem;
+                gap: 1.5rem;
+            }
+            .game-content { 
+                padding: 1rem 0.5rem; 
+            }
+            .game-canvas {
+                max-width: 100%;
+                height: auto;
+            }
+            .game-controls {
+                flex-direction: column;
+                width: 100%;
+            }
+            .control-button {
+                width: 100%;
+                margin: 0.25rem 0;
+            }
+            .instructions {
+                margin: 1rem 0.5rem;
+                padding: 1rem;
+                font-size: 0.9rem;
+            }
+            .mobile-controls {
+                display: grid;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header { padding: 1.5rem 0.5rem; }
+            .header h1 { font-size: 1.8rem; }
+            .game-card { padding: 1rem; }
+            .game-thumbnail { height: 150px; font-size: 3rem; }
+            .game-title { font-size: 1.3rem; }
+            .game-description { font-size: 0.9rem; }
+            .game-header { padding: 0.8rem; }
+            .game-header h2 { font-size: 1.3rem; }
+        }
+    </style>
 </head>
 <body>
-  <div class="container">
-    <h1 class="blinking">🚧 Site Under Construction 🚧</h1>
-    <p>We’re working hard to bring something awesome. Check back soon!</p>
-  </div>
+    <!-- Homepage -->
+    <div id="homepage">
+        <div class="header">
+            <h1>🎮 Gaming Hub</h1>
+            <p>Play classic games right in your browser!</p>
+        </div>
+        <div class="games-container">
+            <div class="game-card" onclick="openGame('minesweeper')">
+                <div class="game-thumbnail minesweeper-thumb">💣</div>
+                <div class="game-title">Minesweeper</div>
+                <div class="game-description">Classic mine detection game. Click tiles to reveal numbers and avoid the hidden mines!</div>
+                <button class="play-button">Play Now</button>
+            </div>
+            
+            <div class="game-card" onclick="openGame('sudoku')">
+                <div class="game-thumbnail sudoku-thumb">🧩</div>
+                <div class="game-title">Sudoku</div>
+                <div class="game-description">Fill the 9x9 grid with numbers 1-9, ensuring no repeats in rows, columns, or 3x3 boxes.</div>
+                <button class="play-button">Play Now</button>
+            </div>
+            
+            <div class="game-card" onclick="openGame('snake')">
+                <div class="game-thumbnail snake-thumb">🐍</div>
+                <div class="game-title">Snake Game</div>
+                <div class="game-description">Control the snake to eat food and grow longer. Don't hit the walls or yourself!</div>
+                <button class="play-button">Play Now</button>
+            </div>
+            
+            <div class="game-card" onclick="openGame('memory')">
+                <div class="game-thumbnail memory-thumb">🧠</div>
+                <div class="game-title">Memory Match</div>
+                <div class="game-description">Flip cards to find matching pairs. Test your memory and concentration skills!</div>
+                <button class="play-button">Play Now</button>
+            </div>
+        </div>
+    </div>
 
-  <script src="script.js"></script>
+    <!-- Minesweeper Game -->
+    <div id="minesweeper-page" class="game-page">
+        <div class="game-header">
+            <h2>💣 Minesweeper</h2>
+            <button class="back-button" onclick="goHome()">← Back to Home</button>
+        </div>
+        <div class="game-content">
+            <canvas id="minesweeper-canvas" class="game-canvas" width="400" height="400"></canvas>
+            <div class="game-controls">
+                <button class="control-button" onclick="startMinesweeper()">New Game</button>
+                <button class="control-button" onclick="toggleDifficulty()">Difficulty: Easy</button>
+            </div>
+            <div class="instructions">
+                <strong>How to Play:</strong> Left click to reveal tiles, right click to flag mines. 
+                Numbers show adjacent mines. Find all safe tiles to win!
+            </div>
+        </div>
+    </div>
+
+    <!-- Sudoku Game -->
+    <div id="sudoku-page" class="game-page">
+        <div class="game-header">
+            <h2>🧩 Sudoku</h2>
+            <button class="back-button" onclick="goHome()">← Back to Home</button>
+        </div>
+        <div class="game-content">
+            <canvas id="sudoku-canvas" class="game-canvas" width="450" height="450"></canvas>
+            <div class="game-controls">
+                <button class="control-button" onclick="startSudoku()">New Puzzle</button>
+                <button class="control-button" onclick="checkSudoku()">Check Solution</button>
+                <button class="control-button" onclick="clearSudoku()">Clear</button>
+            </div>
+            <div class="instructions">
+                <strong>How to Play:</strong> Click a cell and type 1-9. Fill all cells so each row, 
+                column, and 3x3 box contains digits 1-9 exactly once.
+            </div>
+        </div>
+    </div>
+
+    <!-- Snake Game -->
+    <div id="snake-page" class="game-page">
+        <div class="game-header">
+            <h2>🐍 Snake Game</h2>
+            <button class="back-button" onclick="goHome()">← Back to Home</button>
+        </div>
+        <div class="game-content">
+            <canvas id="snake-canvas" class="game-canvas" width="400" height="400"></canvas>
+            <div class="mobile-controls">
+                <button class="mobile-btn" onclick="moveSnake('up')">↑</button>
+                <button class="mobile-btn" onclick="moveSnake('left')">←</button>
+                <button class="mobile-btn" onclick="moveSnake('right')">→</button>
+                <button class="mobile-btn" onclick="moveSnake('down')">↓</button>
+            </div>
+            <div class="game-controls">
+                <button class="control-button" onclick="startSnake()">Start Game</button>
+                <button class="control-button" onclick="pauseSnake()">Pause</button>
+            </div>
+            <div class="instructions">
+                <strong>How to Play:</strong> Use arrow keys, WASD, or mobile buttons to move the snake. 
+                Eat the red food to grow, but don't hit walls or yourself!
+            </div>
+        </div>
+    </div>
+
+    <!-- Memory Game -->
+    <div id="memory-page" class="game-page">
+        <div class="game-header">
+            <h2>🧠 Memory Match</h2>
+            <button class="back-button" onclick="goHome()">← Back to Home</button>
+        </div>
+        <div class="game-content">
+            <canvas id="memory-canvas" class="game-canvas" width="480" height="480"></canvas>
+            <div class="game-controls">
+                <button class="control-button" onclick="startMemory()">New Game</button>
+                <button class="control-button" onclick="shuffleMemory()">Shuffle</button>
+            </div>
+            <div class="instructions">
+                <strong>How to Play:</strong> Click cards to flip them. Find matching pairs by 
+                remembering card positions. Match all pairs to win!
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Game state management
+        let currentGame = null;
+        let gameStates = {
+            minesweeper: { difficulty: 'easy', board: null, gameOver: false },
+            snake: { running: false, paused: false },
+            sudoku: { board: null },
+            memory: { flipped: [], matched: [], cards: [] }
+        };
+
+        // Navigation functions
+        function openGame(gameName) {
+            document.getElementById('homepage').style.display = 'none';
+            document.getElementById(gameName + '-page').style.display = 'flex';
+            currentGame = gameName;
+            
+            // Initialize the game
+            switch(gameName) {
+                case 'minesweeper': startMinesweeper(); break;
+                case 'sudoku': startSudoku(); break;
+                case 'snake': initSnake(); break;
+                case 'memory': startMemory(); break;
+            }
+        }
+
+        function goHome() {
+            document.querySelectorAll('.game-page').forEach(page => {
+                page.style.display = 'none';
+            });
+            document.getElementById('homepage').style.display = 'block';
+            currentGame = null;
+            
+            // Stop any running games
+            if (gameStates.snake.running) {
+                gameStates.snake.running = false;
+            }
+        }
+
+        // Minesweeper Game
+        function startMinesweeper() {
+            const canvas = document.getElementById('minesweeper-canvas');
+            const ctx = canvas.getContext('2d');
+            const state = gameStates.minesweeper;
+            
+            const gridSize = state.difficulty === 'easy' ? 10 : 16;
+            const cellSize = 400 / gridSize;
+            const mineCount = state.difficulty === 'easy' ? 10 : 40;
+            
+            // Initialize board
+            state.board = Array(gridSize).fill().map(() => 
+                Array(gridSize).fill().map(() => ({
+                    mine: false, revealed: false, flagged: false, adjacentMines: 0
+                }))
+            );
+            
+            // Place mines
+            let minesPlaced = 0;
+            while (minesPlaced < mineCount) {
+                const x = Math.floor(Math.random() * gridSize);
+                const y = Math.floor(Math.random() * gridSize);
+                if (!state.board[y][x].mine) {
+                    state.board[y][x].mine = true;
+                    minesPlaced++;
+                }
+            }
+            
+            // Calculate adjacent mines
+            for (let y = 0; y < gridSize; y++) {
+                for (let x = 0; x < gridSize; x++) {
+                    if (!state.board[y][x].mine) {
+                        let count = 0;
+                        for (let dy = -1; dy <= 1; dy++) {
+                            for (let dx = -1; dx <= 1; dx++) {
+                                const ny = y + dy, nx = x + dx;
+                                if (ny >= 0 && ny < gridSize && nx >= 0 && nx < gridSize) {
+                                    if (state.board[ny][nx].mine) count++;
+                                }
+                            }
+                        }
+                        state.board[y][x].adjacentMines = count;
+                    }
+                }
+            }
+            
+            state.gameOver = false;
+            drawMinesweeper();
+            
+            // Add event listeners
+            canvas.onclick = (e) => {
+                if (state.gameOver) return;
+                const rect = canvas.getBoundingClientRect();
+                const x = Math.floor((e.clientX - rect.left) / cellSize);
+                const y = Math.floor((e.clientY - rect.top) / cellSize);
+                revealCell(x, y);
+            };
+            
+            canvas.oncontextmenu = (e) => {
+                e.preventDefault();
+                if (state.gameOver) return;
+                const rect = canvas.getBoundingClientRect();
+                const x = Math.floor((e.clientX - rect.left) / cellSize);
+                const y = Math.floor((e.clientY - rect.top) / cellSize);
+                toggleFlag(x, y);
+            };
+        }
+        
+        function drawMinesweeper() {
+            const canvas = document.getElementById('minesweeper-canvas');
+            const ctx = canvas.getContext('2d');
+            const state = gameStates.minesweeper;
+            const gridSize = state.difficulty === 'easy' ? 10 : 16;
+            const cellSize = 400 / gridSize;
+            
+            // Responsive canvas sizing
+            const container = canvas.parentElement;
+            const containerWidth = container.clientWidth - 40;
+            
+            if (window.innerWidth <= 480) {
+                const size = Math.min(containerWidth, 300);
+                canvas.style.width = size + 'px';
+                canvas.style.height = size + 'px';
+            } else if (window.innerWidth <= 768) {
+                const size = Math.min(containerWidth, 350);
+                canvas.style.width = size + 'px';
+                canvas.style.height = size + 'px';
+            } else {
+                canvas.style.width = '400px';
+                canvas.style.height = '400px';
+            }
+            
+            ctx.clearRect(0, 0, 400, 400);
+            
+            for (let y = 0; y < gridSize; y++) {
+                for (let x = 0; x < gridSize; x++) {
+                    const cell = state.board[y][x];
+                    const px = x * cellSize;
+                    const py = y * cellSize;
+                    
+                    if (cell.revealed) {
+                        ctx.fillStyle = cell.mine ? '#ff6b6b' : '#f0f0f0';
+                        ctx.fillRect(px, py, cellSize, cellSize);
+                        
+                        if (cell.mine) {
+                            ctx.fillStyle = 'black';
+                            ctx.font = `${cellSize * 0.6}px Arial`;
+                            ctx.textAlign = 'center';
+                            ctx.fillText('💣', px + cellSize/2, py + cellSize * 0.7);
+                        } else if (cell.adjacentMines > 0) {
+                            ctx.fillStyle = ['', '#0000ff', '#008000', '#ff0000', '#800080', '#800000', '#008080', '#000000', '#808080'][cell.adjacentMines];
+                            ctx.font = `bold ${cellSize * 0.6}px Arial`;
+                            ctx.textAlign = 'center';
+                            ctx.fillText(cell.adjacentMines, px + cellSize/2, py + cellSize * 0.7);
+                        }
+                    } else {
+                        ctx.fillStyle = cell.flagged ? '#ffeb3b' : '#d0d0d0';
+                        ctx.fillRect(px, py, cellSize, cellSize);
+                        
+                        if (cell.flagged) {
+                            ctx.fillStyle = 'red';
+                            ctx.font = `${cellSize * 0.6}px Arial`;
+                            ctx.textAlign = 'center';
+                            ctx.fillText('🚩', px + cellSize/2, py + cellSize * 0.7);
+                        }
+                    }
+                    
+                    ctx.strokeStyle = '#999';
+                    ctx.strokeRect(px, py, cellSize, cellSize);
+                }
+            }
+        }
+        
+        function revealCell(x, y) {
+            const state = gameStates.minesweeper;
+            const gridSize = state.difficulty === 'easy' ? 10 : 16;
+            
+            if (x < 0 || x >= gridSize || y < 0 || y >= gridSize) return;
+            if (state.board[y][x].revealed || state.board[y][x].flagged) return;
+            
+            state.board[y][x].revealed = true;
+            
+            if (state.board[y][x].mine) {
+                state.gameOver = true;
+                alert('Game Over! You hit a mine!');
+            } else if (state.board[y][x].adjacentMines === 0) {
+                // Reveal adjacent cells
+                for (let dy = -1; dy <= 1; dy++) {
+                    for (let dx = -1; dx <= 1; dx++) {
+                        revealCell(x + dx, y + dy);
+                    }
+                }
+            }
+            
+            drawMinesweeper();
+        }
+        
+        function toggleFlag(x, y) {
+            const state = gameStates.minesweeper;
+            const gridSize = state.difficulty === 'easy' ? 10 : 16;
+            
+            if (x < 0 || x >= gridSize || y < 0 || y >= gridSize) return;
+            if (state.board[y][x].revealed) return;
+            
+            state.board[y][x].flagged = !state.board[y][x].flagged;
+            drawMinesweeper();
+        }
+        
+        function toggleDifficulty() {
+            const state = gameStates.minesweeper;
+            state.difficulty = state.difficulty === 'easy' ? 'hard' : 'easy';
+            document.querySelector('#minesweeper-page .control-button:nth-child(2)').textContent = 
+                `Difficulty: ${state.difficulty.charAt(0).toUpperCase() + state.difficulty.slice(1)}`;
+        }
+
+        // Sudoku Game
+        function startSudoku() {
+            const canvas = document.getElementById('sudoku-canvas');
+            const ctx = canvas.getContext('2d');
+            const state = gameStates.sudoku;
+            
+            // Initialize empty board
+            state.board = Array(9).fill().map(() => Array(9).fill(0));
+            
+            // Generate a simple puzzle (for demo - random filled cells)
+            const filledCells = 20;
+            for (let i = 0; i < filledCells; i++) {
+                const x = Math.floor(Math.random() * 9);
+                const y = Math.floor(Math.random() * 9);
+                const num = Math.floor(Math.random() * 9) + 1;
+                if (state.board[y][x] === 0) {
+                    state.board[y][x] = num;
+                }
+            }
+            
+            drawSudoku();
+            
+            // Add click listener
+            canvas.onclick = (e) => {
+                const rect = canvas.getBoundingClientRect();
+                const x = Math.floor((e.clientX - rect.left) / 50);
+                const y = Math.floor((e.clientY - rect.top) / 50);
+                selectSudokuCell(x, y);
+            };
+        }
+        
+        function drawSudoku() {
+            const canvas = document.getElementById('sudoku-canvas');
+            const ctx = canvas.getContext('2d');
+            const state = gameStates.sudoku;
+            
+            // Responsive canvas sizing
+            const container = canvas.parentElement;
+            const containerWidth = container.clientWidth - 40;
+            
+            if (window.innerWidth <= 480) {
+                const size = Math.min(containerWidth, 300);
+                canvas.style.width = size + 'px';
+                canvas.style.height = size + 'px';
+            } else if (window.innerWidth <= 768) {
+                const size = Math.min(containerWidth, 350);
+                canvas.style.width = size + 'px';
+                canvas.style.height = size + 'px';
+            } else {
+                canvas.style.width = '450px';
+                canvas.style.height = '450px';
+            }
+            
+            ctx.clearRect(0, 0, 450, 450);
+            
+            // Draw grid
+            for (let i = 0; i < 10; i++) {
+                ctx.strokeStyle = i % 3 === 0 ? '#000' : '#ccc';
+                ctx.lineWidth = i % 3 === 0 ? 3 : 1;
+                ctx.beginPath();
+                ctx.moveTo(i * 50, 0);
+                ctx.lineTo(i * 50, 450);
+                ctx.moveTo(0, i * 50);
+                ctx.lineTo(450, i * 50);
+                ctx.stroke();
+            }
+            
+            // Draw numbers
+            const fontSize = window.innerWidth <= 480 ? 20 : 24;
+            ctx.font = `bold ${fontSize}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.fillStyle = '#333';
+            
+            for (let y = 0; y < 9; y++) {
+                for (let x = 0; x < 9; x++) {
+                    if (state.board[y][x] !== 0) {
+                        ctx.fillText(state.board[y][x], x * 50 + 25, y * 50 + 35);
+                    }
+                }
+            }
+        }
+        
+        function selectSudokuCell(x, y) {
+            const num = prompt('Enter number (1-9):');
+            if (num && num >= '1' && num <= '9') {
+                gameStates.sudoku.board[y][x] = parseInt(num);
+                drawSudoku();
+            } else if (num === '' || num === '0') {
+                gameStates.sudoku.board[y][x] = 0;
+                drawSudoku();
+            }
+        }
+        
+        function checkSudoku() {
+            alert('Solution checker not implemented in demo - but your puzzle looks great!');
+        }
+        
+        function clearSudoku() {
+            gameStates.sudoku.board = Array(9).fill().map(() => Array(9).fill(0));
+            drawSudoku();
+        }
+
+        // Snake Game
+        let snakeInterval;
+        
+        function initSnake() {
+            const canvas = document.getElementById('snake-canvas');
+            const state = gameStates.snake;
+            
+            state.snake = [{x: 10, y: 10}];
+            state.food = {x: 15, y: 15};
+            state.direction = {x: 0, y: 0};
+            state.running = false;
+            state.paused = false;
+            
+            // Responsive canvas sizing
+            resizeSnakeCanvas();
+            window.addEventListener('resize', resizeSnakeCanvas);
+            
+            drawSnake();
+            
+            // Add keyboard controls
+            document.addEventListener('keydown', (e) => {
+                if (currentGame !== 'snake') return;
+                e.preventDefault(); // Prevent page scrolling
+                
+                switch(e.key) {
+                    case 'ArrowUp': case 'w': case 'W':
+                        if (state.direction.y === 0) state.direction = {x: 0, y: -1};
+                        break;
+                    case 'ArrowDown': case 's': case 'S':
+                        if (state.direction.y === 0) state.direction = {x: 0, y: 1};
+                        break;
+                    case 'ArrowLeft': case 'a': case 'A':
+                        if (state.direction.x === 0) state.direction = {x: -1, y: 0};
+                        break;
+                    case 'ArrowRight': case 'd': case 'D':
+                        if (state.direction.x === 0) state.direction = {x: 1, y: 0};
+                        break;
+                }
+            });
+        }
+        
+        function resizeSnakeCanvas() {
+            const canvas = document.getElementById('snake-canvas');
+            const container = canvas.parentElement;
+            const containerWidth = container.clientWidth - 40; // Account for padding
+            
+            if (window.innerWidth <= 480) {
+                const size = Math.min(containerWidth, 300);
+                canvas.style.width = size + 'px';
+                canvas.style.height = size + 'px';
+            } else if (window.innerWidth <= 768) {
+                const size = Math.min(containerWidth, 350);
+                canvas.style.width = size + 'px';
+                canvas.style.height = size + 'px';
+            } else {
+                canvas.style.width = '400px';
+                canvas.style.height = '400px';
+            }
+        }
+        
+        function moveSnake(direction) {
+            const state = gameStates.snake;
+            if (!state.running || state.paused) return;
+            
+            switch(direction) {
+                case 'up':
+                    if (state.direction.y === 0) state.direction = {x: 0, y: -1};
+                    break;
+                case 'down':
+                    if (state.direction.y === 0) state.direction = {x: 0, y: 1};
+                    break;
+                case 'left':
+                    if (state.direction.x === 0) state.direction = {x: -1, y: 0};
+                    break;
+                case 'right':
+                    if (state.direction.x === 0) state.direction = {x: 1, y: 0};
+                    break;
+            }
+        }
+        
+        function startSnake() {
+            const state = gameStates.snake;
+            
+            // Reset game state
+            clearInterval(snakeInterval);
+            state.snake = [{x: 10, y: 10}];
+            state.food = {x: 15, y: 15};
+            state.direction = {x: 0, y: 0};
+            state.running = true;
+            state.paused = false;
+            
+            drawSnake();
+            
+            snakeInterval = setInterval(() => {
+                if (!state.paused && state.running) {
+                    updateSnake();
+                }
+            }, 150);
+        }
+        
+        function pauseSnake() {
+            gameStates.snake.paused = !gameStates.snake.paused;
+        }
+        
+        function updateSnake() {
+            const state = gameStates.snake;
+            const head = {x: state.snake[0].x + state.direction.x, y: state.snake[0].y + state.direction.y};
+            
+            // Check collisions
+            if (head.x < 0 || head.x >= 20 || head.y < 0 || head.y >= 20 ||
+                state.snake.some(segment => segment.x === head.x && segment.y === head.y)) {
+                state.running = false;
+                clearInterval(snakeInterval);
+                setTimeout(() => {
+                    alert(`Game Over! Score: ${state.snake.length - 1}\nClick "Start Game" to play again!`);
+                }, 100);
+                return;
+            }
+            
+            state.snake.unshift(head);
+            
+            // Check food
+            if (head.x === state.food.x && head.y === state.food.y) {
+                // Generate new food position (avoid snake body)
+                do {
+                    state.food = {
+                        x: Math.floor(Math.random() * 20),
+                        y: Math.floor(Math.random() * 20)
+                    };
+                } while (state.snake.some(segment => segment.x === state.food.x && segment.y === state.food.y));
+            } else {
+                state.snake.pop();
+            }
+            
+            drawSnake();
+        }
+        
+        function drawSnake() {
+            const canvas = document.getElementById('snake-canvas');
+            const ctx = canvas.getContext('2d');
+            const state = gameStates.snake;
+            
+            ctx.clearRect(0, 0, 400, 400);
+            
+            // Draw snake
+            ctx.fillStyle = '#4CAF50';
+            state.snake.forEach((segment, index) => {
+                ctx.fillStyle = index === 0 ? '#2E7D32' : '#4CAF50';
+                ctx.fillRect(segment.x * 20, segment.y * 20, 18, 18);
+            });
+            
+            // Draw food
+            ctx.fillStyle = '#f44336';
+            ctx.fillRect(state.food.x * 20, state.food.y * 20, 18, 18);
+            
+            // Draw score
+            ctx.fillStyle = '#333';
+            ctx.font = 'bold 16px Arial';
+            ctx.fillText(`Score: ${state.snake.length - 1}`, 10, 25);
+        }
+
+        // Memory Game
+        function startMemory() {
+            const canvas = document.getElementById('memory-canvas');
+            const ctx = canvas.getContext('2d');
+            const state = gameStates.memory;
+            
+            // Create card deck
+            const symbols = ['🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼'];
+            state.cards = [...symbols, ...symbols].sort(() => Math.random() - 0.5);
+            state.flipped = [];
+            state.matched = [];
+            
+            drawMemory();
+            
+            canvas.onclick = (e) => {
+                const rect = canvas.getBoundingClientRect();
+                const x = Math.floor((e.clientX - rect.left) / 120);
+                const y = Math.floor((e.clientY - rect.top) / 120);
+                const index = y * 4 + x;
+                
+                if (state.flipped.length < 2 && !state.flipped.includes(index) && !state.matched.includes(index)) {
+                    state.flipped.push(index);
+                    drawMemory();
+                    
+                    if (state.flipped.length === 2) {
+                        setTimeout(() => {
+                            if (state.cards[state.flipped[0]] === state.cards[state.flipped[1]]) {
+                                state.matched.push(...state.flipped);
+                                if (state.matched.length === 16) {
+                                    alert('Congratulations! You matched all pairs!');
+                                }
+                            }
+                            state.flipped = [];
+                            drawMemory();
+                        }, 1000);
+                    }
+                }
+            };
+        }
+        
+        function drawMemory() {
+            const canvas = document.getElementById('memory-canvas');
+            const ctx = canvas.getContext('2d');
+            const state = gameStates.memory;
+            
+            // Responsive canvas sizing
+            const container = canvas.parentElement;
+            const containerWidth = container.clientWidth - 40;
+            
+            if (window.innerWidth <= 480) {
+                const size = Math.min(containerWidth, 300);
+                canvas.style.width = size + 'px';
+                canvas.style.height = size + 'px';
+            } else if (window.innerWidth <= 768) {
+                const size = Math.min(containerWidth, 350);
+                canvas.style.width = size + 'px';
+                canvas.style.height = size + 'px';
+            } else {
+                canvas.style.width = '480px';
+                canvas.style.height = '480px';
+            }
+            
+            ctx.clearRect(0, 0, 480, 480);
+            
+            const cardSize = 120;
+            const fontSize = window.innerWidth <= 480 ? 36 : 48;
+            
+            for (let i = 0; i < 16; i++) {
+                const x = (i % 4) * cardSize;
+                const y = Math.floor(i / 4) * cardSize;
+                
+                if (state.matched.includes(i)) {
+                    ctx.fillStyle = '#4CAF50';
+                } else if (state.flipped.includes(i)) {
+                    ctx.fillStyle = '#FFF';
+                } else {
+                    ctx.fillStyle = '#2196F3';
+                }
+                
+                ctx.fillRect(x + 5, y + 5, cardSize - 10, cardSize - 10);
+                
+                if (state.flipped.includes(i) || state.matched.includes(i)) {
+                    ctx.font = `${fontSize}px Arial`;
+                    ctx.textAlign = 'center';
+                    ctx.fillStyle = '#333';
+                    ctx.fillText(state.cards[i], x + cardSize/2, y + cardSize/2 + fontSize/3);
+                }
+                
+                ctx.strokeStyle = '#333';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(x + 5, y + 5, cardSize - 10, cardSize - 10);
+            }
+        }
+        
+        function shuffleMemory() {
+            const state = gameStates.memory;
+            const symbols = ['🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼'];
+            state.cards = [...symbols, ...symbols].sort(() => Math.random() - 0.5);
+            state.flipped = [];
+            state.matched = [];
+            drawMemory();
+        }
+
+        // Initialize homepage on load
+        window.onload = function() {
+            document.getElementById('homepage').style.display = 'block';
+        };
+    </script>
 </body>
 </html>
