@@ -9,6 +9,7 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            transition: background-color 0.3s, color 0.3s;
         }
 
         body {
@@ -16,18 +17,57 @@
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             color: #333;
+            transition: background-color 0.3s, color 0.3s;
         }
 
         .header {
             text-align: center;
             padding: 2rem 1rem;
             color: white;
+            position: relative;
         }
 
         .header h1 {
             font-size: 2.5rem;
             margin-bottom: 0.5rem;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        /* Dark mode styles */
+        body.dark-mode {
+            background: #121212;
+            color: #e0e0e0;
+        }
+
+        body.dark-mode .header {
+            color: #e0e0e0;
+        }
+
+        body.dark-mode .game-card {
+            background: #1e1e1e;
+            box-shadow: 0 8px 25px rgba(255,255,255,0.1);
+        }
+
+        body.dark-mode .game-description {
+            color: #bbb;
+        }
+
+        body.dark-mode .game-header {
+            background: #333;
+        }
+
+        body.dark-mode .control-button {
+            background: #444;
+            color: #eee;
+        }
+
+        body.dark-mode .control-button:hover {
+            background: #555;
+        }
+
+        body.dark-mode .back-button {
+            background: rgba(255,255,255,0.1);
+            color: #eee;
         }
 
         .header p {
@@ -42,6 +82,54 @@
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 2rem;
+        }
+
+        /* Dark mode toggle switch */
+        .dark-mode-switch {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+
+        .dark-mode-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: 0.4s;
+            border-radius: 24px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: 0.4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: #2196F3;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(26px);
         }
 
         .game-card {
@@ -267,6 +355,10 @@
     <div id="homepage">
         <div class="header">
             <h1>🎮 Gaming Hub</h1>
+            <label class="dark-mode-switch">
+                <input type="checkbox" id="darkModeToggle">
+                <span class="slider"></span>
+            </label>
             <p>Play classic games right in your browser!</p>
         </div>
         <div class="games-container">
@@ -443,6 +535,15 @@
             }
         }
 
+        // Dark mode toggle
+        document.getElementById('darkModeToggle').addEventListener('change', function() {
+            if (this.checked) {
+                document.body.classList.add('dark-mode');
+            } else {
+                document.body.classList.remove('dark-mode');
+            }
+        });
+
         function startMinesweeper() {
             const canvas = document.getElementById('minesweeper-canvas');
             const ctx = canvas.getContext('2d');
@@ -551,26 +652,25 @@
             const ctx = canvas.getContext('2d');
             const state = gameStates.minesweeper;
             const gridSize = state.difficulty === 'easy' ? 10 : 16;
-            const cellSize = 400 / gridSize;
+            const canvasSize = gridSize * 40; // 40px per cell
+            const cellSize = canvasSize / gridSize;
             
             // Responsive canvas sizing
             const container = canvas.parentElement;
             const containerWidth = container.clientWidth - 40;
             
+            let size;
             if (window.innerWidth <= 480) {
-                const size = Math.min(containerWidth, 300);
-                canvas.style.width = size + 'px';
-                canvas.style.height = size + 'px';
+                size = Math.min(containerWidth, canvasSize, 300);
             } else if (window.innerWidth <= 768) {
-                const size = Math.min(containerWidth, 350);
-                canvas.style.width = size + 'px';
-                canvas.style.height = size + 'px';
+                size = Math.min(containerWidth, canvasSize, 350);
             } else {
-                canvas.style.width = '400px';
-                canvas.style.height = '400px';
+                size = Math.min(containerWidth, canvasSize);
             }
+            canvas.style.width = size + 'px';
+            canvas.style.height = size + 'px';
             
-            ctx.clearRect(0, 0, 400, 400);
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
             
             for (let y = 0; y < gridSize; y++) {
                 for (let x = 0; x < gridSize; x++) {
@@ -622,6 +722,15 @@ function revealCell(x, y) {
             
             if (state.board[y][x].mine) {
                 state.gameOver = true;
+                // Reveal all mines when a mine is clicked
+                for (let row of state.board) {
+                    for (let cell of row) {
+                        if (cell.mine) {
+                            cell.revealed = true;
+                        }
+                    }
+                }
+                drawMinesweeper();
                 alert('Game Over! You hit a mine!');
             } else if (state.board[y][x].adjacentMines === 0) {
                 // Reveal adjacent cells
